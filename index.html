@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تطبيق الذكريات الفاخر</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #05070c;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* حاوية شكل الهاتف الفخمة */
+        .phone-frame {
+            width: 100%;
+            max-width: 410px;
+            height: 100vh;
+            max-height: 840px;
+            background: linear-gradient(135deg, #0b1120, #020617);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        @media (min-width: 450px) {
+            .phone-frame {
+                border-radius: 44px;
+                border: 12px solid #111827;
+                height: 88vh;
+            }
+        }
+
+        /* شاشة المصادقة (تسجيل الدخول / إنشاء حساب) */
+        #auth-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #090d16;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 30px;
+            transition: opacity 0.4s ease;
+        }
+
+        .auth-logo {
+            text-align: center;
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.4));
+        }
+
+        .auth-title {
+            text-align: center;
+            font-size: 1.6rem;
+            color: #f8fafc;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+
+        .tabs-switcher {
+            display: flex;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: none;
+            color: #94a3b8;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        /* شريط العنوان العلوي للتطبيق الرئيسي */
+        .app-header {
+            padding: 18px 20px;
+            background: rgba(11, 17, 32, 0.85);
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: bold;
+            font-size: 1.15rem;
+            color: #38bdf8;
+            z-index: 10;
+        }
+
+        .logout-btn {
+            background: rgba(244, 63, 94, 0.15);
+            color: #f43f5e;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        /* محتوى التطبيق */
+        .app-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 85px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* شريط التنقل السفلي الفاخر */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(11, 17, 32, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .nav-item span {
+            font-size: 1.3rem;
+            margin-bottom: 3px;
+        }
+
+        .nav-item.active {
+            color: #38bdf8;
+            transform: scale(1.05);
+        }
+
+        /* المدخلات والأزرار العامة */
+        input, textarea, button {
+            width: 100%;
+            padding: 13px 16px;
+            margin-bottom: 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(30, 41, 59, 0.5);
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #38bdf8;
+            background: rgba(30, 41, 59, 0.8);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
+            transition: 0.3s;
+        }
+
+        .btn-main:active {
+            transform: scale(0.98);
+        }
+
+        /* البطاقات والمنشورات الفاخرة */
+        .card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .user-name {
+            font-weight: bold;
+            color: #f43f5e;
+            font-size: 0.9rem;
+        }
+
+        .memory-badge {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .post-content {
+            font-size: 0.92rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .post-time {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 10px;
+            display: block;
+        }
+
+        /* نظام الشات */
+        .chat-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 10px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 11px 15px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .msg-in {
+            background: #334155;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg-out {
+            background: linear-gradient(135deg, #0284c7, #0284c7);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .chat-input-row input {
+            margin-bottom: 0;
+        }
+
+        .chat-input-row button {
+            width: 85px;
+            margin-bottom: 0;
+            padding: 13px 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+
+        <!-- شاشة تسجيل الدخول وإنشاء الحساب (تظهر أولاً) -->
+        <div id="auth-screen">
+            <div class="auth-logo">💎</div>
+            <div class="auth-title">عالم الذكريات</div>
+            <div class="auth-subtitle">سجل دخولك لتنطلق في عالم التواصل الفاخر</div>
+
+            <div class="tabs-switcher">
+                <button class="tab-btn active" onclick="switchAuthTab('login', this)">تسجيل الدخول</button>
+                <button class="tab-btn" onclick="switchAuthTab('register', this)">حساب جديد</button>
+            </div>
+
+            <!-- نموذج تسجيل الدخول -->
+            <form id="login-form" class="auth-form active" onsubmit="handleLogin(event)">
+                <input type="text" id="loginUser" placeholder="اسم المستخدم أو البريد" required>
+                <input type="password" placeholder="كلمة المرور" required>
+                <button type="submit" class="btn-main">دخول إلى التطبيق 🚀</button>
+            </form>
+
+            <!-- نموذج إنشاء حساب -->
+            <form id="register-form" class="auth-form" onsubmit="handleRegister(event)">
+                <input type="text" id="regName" placeholder="اسم المستخدم الكامل" required>
+                <input type="email" placeholder="البريد الإلكتروني" required>
+                <input type="password" placeholder="كلمة المرور الجديدة" required>
+                <button type="submit" class="btn-main">إنشاء الحساب الان ✨</button>
+            </form>
+        </div>
+
+        <!-- شريط العنوان العلوي للتطبيق -->
+        <div class="app-header">
+            <span id="appTitle">✨ الذكريات</span>
+            <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+        </div>
+
+        <!-- محتوى التطبيق الرئيسي -->
+        <div class="app-body">
+            
+            <!-- 1. شاشة المنشورات والذكريات -->
+            <div id="screen-feed" class="screen active">
+                <div class="card">
+                    <textarea id="postInput" rows="3" placeholder="شارك ذكراك أو شعورك اليوم..."></textarea>
+                    <button class="btn-main" onclick="addPost()">نشر الذكرى 🚀</button>
+                </div>
+
+                <div id="postsFeed">
+                    <div class="card">
+                        <div class="post-header">
+                            <span class="user-name">سارة أحمد</span>
+                            <span class="memory-badge">📸 ذكريات الطفولة</span>
+                        </div>
+                        <p class="post-content">أجمل أيام السفر مع العائلة، أوقات لا تُقدر بثمن وتبقى محفورة في الذاكرة للأبد.</p>
+                        <span class="post-time">منذ ساعتين</span>
+                    </div>
+
+                    <div class="card">
+                        <div class="post-header">
+                            <span class="user-name">محمد خالد</span>
+                            <span class="memory-badge">🌟 إنجاز وفرحة</span>
+                        </div>
+                        <p class="post-content">اليوم أتممت بنجاح تطوير مشروعي التقني الأول، شكراً لكل من دعموني في هذه المسيرة!</p>
+                        <span class="post-time">أمس</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. شاشة المراسلة (الشات) -->
+            <div id="screen-chat" class="screen">
+                <div class="chat-wrapper">
+                    <div class="chat-box" id="chatBox">
+                        <div class="message msg-in">أهلاً بك! يمكنك هنا مراسلة أصدقائك ومشاركة أطراف الحديث بحرية.</div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input type="text" id="chatInput" placeholder="اكتب رسالتك..." onkeypress="handleChatKey(event)">
+                        <button class="btn-main" onclick="sendMessage()">إرسال</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. شاشة الحساب الشخصي -->
+            <div id="screen-account" class="screen">
+                <div class="card" style="text-align: center; padding: 25px 16px;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">👤</div>
+                    <h3 id="displayUsername" style="color: #38bdf8; margin-bottom: 5px;">اسم المستخدم</h3>
+                    <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px;">عضو مميز في منصة الذكريات</p>
+                    
+                    <form onsubmit="event.preventDefault(); alert('تم حفظ التعديلات بنجاح!');" style="text-align: right;">
+                        <label style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; display: block;">تعديل الاسم</label>
+                        <input type="text" id="editNameInput" value="مستخدم مميز">
+                        <label style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; display: block;">كلمة المرور الجديدة</label>
+                        <input type="password" placeholder="••••••••">
+                        <button type="submit" class="btn-main" style="margin-top: 10px;">حفظ التغييرات</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- شريط التنقل السفلي -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="switchScreen('feed', this)">
+                <span>🏠</span>الرئيسية
+            </button>
+            <button class="nav-item" onclick="switchScreen('chat', this)">
+                <span>💬</span>المراسلة
+            </button>
+            <button class="nav-item" onclick="switchScreen('account', this)">
+                <span>👤</span>حسابي
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentUserName = "أنت";
+
+        // التبديل بين تبويبات الدخول وإنشاء الحساب
+        function switchAuthTab(tab, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+
+            btn.classList.add('active');
+            if(tab === 'login') {
+                document.getElementById('login-form').classList.add('active');
+            } else {
+                document.getElementById('register-form').classList.add('active');
+            }
+        }
+
+        // التعامل مع تسجيل الدخول
+        function handleLogin(e) {
+            e.preventDefault();
+            const val = document.getElementById('loginUser').value.trim();
+            if(val) currentUserName = val;
+            finishAuth();
+        }
+
+        // التعامل مع إنشاء الحساب
+        function handleRegister(e) {
+            e.preventDefault();
+            const val = document.getElementById('regName').value.trim();
+            if(val) currentUserName = val;
+            finishAuth();
+        }
+
+        // إخفاء شاشة الدخول وإظهار التطبيق
+        function finishAuth() {
+            document.getElementById('displayUsername').innerText = currentUserName;
+            const authScreen = document.getElementById('auth-screen');
+            authScreen.style.opacity = '0';
+            setTimeout(() => {
+                authScreen.style.display = 'none';
+            }, 400);
+        }
+
+        // تسجيل الخروج والعودة للشاشة الأولى
+        function logout() {
+            const authScreen = document.getElementById('auth-screen');
+            authScreen.style.display = 'flex';
+            authScreen.style.opacity = '1';
+        }
+
+        // التبديل السلس بين الشاشات الرئيسية
+        function switchScreen(screenId, btnElement) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + screenId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            const titles = { 
+                'feed': '✨ الذكريات', 
+                'chat': '💬 المحادثات الفورية', 
+                'account': '⚙️ الحساب الشخصي' 
+            };
+            document.getElementById('appTitle').innerText = titles[screenId];
+        }
+
+        // إضافة منشور جديد باستخدام اسم المستخدم الحالي
+        function addPost() {
+            const input = document.getElementById('postInput');
+            const feed = document.getElementById('postsFeed');
+            if (!input.value.trim()) return;
+
+            const newCard = document.createElement('div');
+            newCard.className = 'card';
+            newCard.innerHTML = `
+                <div class="post-header">
+                    <span class="user-name">${currentUserName}</span>
+                    <span class="memory-badge">✨ ذكرى جديدة</span>
+                </div>
+                <p class="post-content">${input.value}</p>
+                <span class="post-time">الآن</span>
+            `;
+            feed.prepend(newCard);
+            input.value = '';
+        }
+
+        // إرسال رسالة في الشات
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const box = document.getElementById('chatBox');
+            if (!input.value.trim()) return;
+
+            const msg = document.createElement('div');
+            msg.className = 'message msg-out';
+            msg.innerText = input.value;
+            box.appendChild(msg);
+            box.scrollTop = box.scrollHeight;
+            input.value = '';
+        }
+
+        function handleChatKey(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+    </script>
+</body>
+</html>
